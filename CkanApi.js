@@ -20,7 +20,9 @@
     //    function(data) {
     //        var c = data;
     //    });
-    var a = "";
+    var c = ckan.Action_Enum;
+    var d = ckan.Action_Enum.PackageList;
+    var a = ckan.getAll(ckan.getActions.PackageList);
     var b = $.getJSON('http://data.dai.uom.gr/api/3/action/package_list?callback=?', function (data) {
         a = data.result[3];
         getPackage(a);
@@ -44,16 +46,88 @@
     //    var a = jqXHR;
     //});
 });
+var ckan_Instance = function() {
+    var ckan_instance_endpoint = 'http://data.dai.uom.gr/api/3/action/',
+    id = '?id=',
+    callback = "?callback=?";
+
+    var Action_Enum = {
+        PackageList: 'package_list',
+        GroupList: 'group_list',
+        TagList: 'tag_list',
+        PackageShow: 'package_show',
+        TagShow: 'tag_show',
+        GroupShow: 'group_show'
+    };
+
+    var TypeofAction_Enum = {
+        GET: 0,
+        GETALL: 1
+    };
+
+    //var result;
+
+
+    return {
+        getActions: function () { return Action_Enum; },
+        buildUrl: function (action, typeOfAction) {
+            var url = '';
+            switch(typeOfAction) {
+                case 0:
+                    url = ckan_instance_endpoint + action + id;
+                    break;
+                case 1:
+                    url = ckan_instance_endpoint + action + callback;
+                    break;
+                default:
+                    break;
+            }
+            return url;
+        },
+        getAll: function(action) {
+            var result;
+            var url = this.buildUrl(action, TypeofAction_Enum.GETALL);
+            $.ajax({
+                url: url,
+                type: "GET",
+                dataType: "jsonp",
+                contentType: "application/x-www-form-urlencoded",
+                crossDomain: true
+            }).done(function (data) {
+                if (data.result) {
+                    result = data.result;
+                }
+                else if (result.error != null && result.error != "") {
+                }
+            }).error(function (jqXHR, textStatus, errorThrown) {
+                var a = jqXHR;
+            });
+        }
+
+    }
+}
+
+var ckan = ckan_Instance();
 
 var package_list_endpoint = 'http://data.dai.uom.gr/api/3/action/package_list?callback=?',
     group_list_endpoint = 'http://data.dai.uom.gr/api/3/action/group_list?callback=?',
     tag_list_enpoint = 'http://data.dai.uom.gr/api/3/action/tag_list?callback=?';
-var package_show_endpoint = 'http://data.dai.uom.gr/api/3/action/package_show',
+var package_show_endpoint = 'http://data.dai.uom.gr/api/3/action/package_show?id=',
+    tag_show_endpoint = 'http://data.dai.uom.gr/api/3/action/tag_show?id=',
+    group_show_endpoint = 'http://data.dai.uom.gr/api/3/action/group_show?id=',
     callback = "?callback=?";
+var package_show_endpoint = 'http://data.dai.uom.gr/api/3/action/package_show?id=',
+    tag_show_endpoint = 'http://data.dai.uom.gr/api/3/action/tag_show?id=',
+    group_show_endpoint = 'http://data.dai.uom.gr/api/3/action/group_show?id=',
+    callback = "?callback=?";
+
+function BuildUrl() {
+    
+}
 
 function getPackage(packageId) {
     var package;
-    var url = package_show_endpoint + callback + "?id=" + packageId;
+    var url = package_show_endpoint + "?id=" + packageId;
 
     $.ajax({
         url: url,

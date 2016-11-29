@@ -20,13 +20,32 @@
     //    function(data) {
     //        var c = data;
     //    });
-    var c = ckan.Action_Enum;
-    var d = ckan.Action_Enum.PackageList;
-    var a = ckan.getAll(ckan.getActions.PackageList);
-    var b = $.getJSON('http://data.dai.uom.gr/api/3/action/package_list?callback=?', function (data) {
-        a = data.result[3];
-        getPackage(a);
+    $.extend($.fn.dataTable.defaults, {
+        "language": greekInspiniaDataTable()
     });
+
+    //var table = $('#packageListTable').DataTable({
+    //    "lengthMenu": [[-1, 10, 20, 50], ["Σύνολο", 10, 20, 50]]
+    //});
+
+
+    //var a = ckan.getAll(ckan.getActions().PackageList);
+
+    DisplayLoadingSpinner();
+
+    ckan.getAll(ckan.getActions().PackageList)
+    .done(function (result) {
+        var a = result;
+        var packageListTable = createPackageTable("packageListDiv", result.result);
+
+
+    }).always(function () {
+        HideLoadingSpinner();
+    });
+    //var b = $.getJSON('http://data.dai.uom.gr/api/3/action/package_list?callback=?', function (data) {
+    //    a = data.result[3];
+    //    getPackage(a);
+    //});
     
     //$.ajax({
     //    url: 'http://demo.ckan.org/api/3/action/package_list?callback=?',
@@ -46,10 +65,35 @@
     //    var a = jqXHR;
     //});
 });
+
+function createPackageTable(tableDiv, tableData) {
+    var table = $("#packageListTable")[0],
+        tableBody = $("#packageListTable > tbody")[0];
+
+    for (var i = 1; i < tableData.length; i++) {
+        var tr = document.createElement('tr');
+
+        tr.appendChild(document.createElement('td'));
+        tr.appendChild(document.createElement('td'));
+
+        tr.cells[0].appendChild(document.createTextNode('Text1'))
+        tr.cells[1].appendChild(document.createTextNode('Text2'));
+
+        tableBody.appendChild(tr);
+    }
+    table.appendChild(tableBody);
+
+    ckan_Instance.packageTable = $("#packageListTable").DataTable({
+        "lengthMenu": [[-1, 10, 20, 50], ["Σύνολο", 10, 20, 50]]
+    });
+}
+
 var ckan_Instance = function() {
     var ckan_instance_endpoint = 'http://data.dai.uom.gr/api/3/action/',
     id = '?id=',
     callback = "?callback=?";
+
+    var packageTable;
 
     var Action_Enum = {
         PackageList: 'package_list',
@@ -87,21 +131,19 @@ var ckan_Instance = function() {
         getAll: function(action) {
             var result;
             var url = this.buildUrl(action, TypeofAction_Enum.GETALL);
-            $.ajax({
+            return $.ajax({
                 url: url,
                 type: "GET",
                 dataType: "jsonp",
                 contentType: "application/x-www-form-urlencoded",
                 crossDomain: true
-            }).done(function (data) {
-                if (data.result) {
-                    result = data.result;
-                }
-                else if (result.error != null && result.error != "") {
-                }
+            }).done(function (result) {
+                return result;
             }).error(function (jqXHR, textStatus, errorThrown) {
-                var a = jqXHR;
+                return null
             });
+
+            return result;
         }
 
     }
@@ -148,7 +190,15 @@ function getPackage(packageId) {
     });
 }
 
+//Display Spinner
+function DisplayLoadingSpinner() {
+    $("#loadingSpinnerModal, #bounceSpinner").css("display", "block");
+}
 
+//HideSpinner
+function HideLoadingSpinner() {
+    $("#loadingSpinnerModal, #bounceSpinner").css("display", "none");
+}
 
 function greekInspiniaDataTable() {
     return {

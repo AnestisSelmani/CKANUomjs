@@ -1,84 +1,100 @@
-﻿@model MyProject.Models.IndexViewModel
-@{
-    ViewBag.Title = "Manage";
+﻿@{
+    ViewBag.Title = "Home Page";
 }
 
-<h2>@ViewBag.Title.</h2>
 
-<p class="text-success">@ViewBag.StatusMessage</p>
-<div>
-    <h4>Change your account settings</h4>
-    <hr />
-    <dl class="dl-horizontal">
-        <dt>Password:</dt>
-        <dd>
-            [
-            @if (Model.HasPassword)
-            {
-                @Html.ActionLink("Change your password", "ChangePassword")
-            }
-            else
-            {
-                @Html.ActionLink("Create", "SetPassword")
-            }
-            ]
-        </dd>
-        <dt>External Logins:</dt>
-        <dd>
-            @Model.Logins.Count [
-            @Html.ActionLink("Manage", "ManageLogins") ]
-        </dd>
-        @*
-            Phone Numbers can used as a second factor of verification in a two-factor authentication system.
-             
-             See <a href="http://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                for details on setting up this ASP.NET application to support two-factor authentication using SMS.
-             
-             Uncomment the following block after you have set up two-factor authentication
-        *@
-        @*  
-            <dt>Phone Number:</dt>
-            <dd>
-                @(Model.PhoneNumber ?? "None") [
-                @if (Model.PhoneNumber != null)
-                {
-                    @Html.ActionLink("Change", "AddPhoneNumber")
-                    @: &nbsp;|&nbsp;
-                    @Html.ActionLink("Remove", "RemovePhoneNumber")
-                }
-                else
-                {
-                    @Html.ActionLink("Add", "AddPhoneNumber")
-                }
-                ]
-            </dd>
-        *@
-        <dt>Two-Factor Authentication:</dt>
-        <dd>
-            <p>
-                There are no two-factor authentication providers configured. See <a href="http://go.microsoft.com/fwlink/?LinkId=403804">this article</a>
-                for details on setting up this ASP.NET application to support two-factor authentication.
-            </p>
-            @*@if (Model.TwoFactor)
-                {
-                    using (Html.BeginForm("DisableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-                    {
-                        @Html.AntiForgeryToken()
-                        <text>Enabled
-                        <input type="submit" value="Disable" class="btn btn-link" />
-                        </text>
-                    }
-                }
-                else
-                {
-                    using (Html.BeginForm("EnableTwoFactorAuthentication", "Manage", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
-                    {
-                        @Html.AntiForgeryToken()
-                        <text>Disabled
-                        <input type="submit" value="Enable" class="btn btn-link" />
-                        </text>
-                    }
-                }*@
-        </dd>
-    </dl>
+<style type="text/css">
+    .fa{
+        cursor: pointer;
+    }
+
+    .align-center{
+        text-align:center;
+    }
+    #packageShowTable{
+        border: 1px solid black;
+        width:100%;
+        border-radius:25px;
+        
+    }
+    #packageShowTable tr td{
+        border: 1px solid black;
+    }
+    #packageShowTable td{
+        padding: 10px 10px 10px 10px;
+    }
+    table > thead td{
+        font-weight: bold;
+    }
+
+</style>
+
+<div class="jumbotron">
+    <h1>ASP.NET</h1>
+    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
+    <p><a href="http://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
 </div>
+
+<div class="row">
+    <div class="col-md-4">
+        <h2>Getting started</h2>
+        <p>
+            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
+            enables a clean separation of concerns and gives you full control over markup
+            for enjoyable, agile development.
+        </p>
+        <p><a class="btn btn-default" href="http://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+    </div>
+
+    <div class="col-md-8">
+        <div class="row">
+            <div id="packageListDiv">
+                <table id="packageListTable">
+                    <thead>
+                        <tr>
+                            <td style="width:80%">
+                                Dataset
+                            </td>
+                            <td>
+                                Details
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="row" id="packageShow" style="margin-top:30px">
+            <table id="packageShowTable">
+                <thead>
+                    <tr><td style="width:40%">Field</td><td style="width:60%">Value</td></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Description</td><td></td></tr>
+                    <tr><td>Description</td><td></td></tr>
+                    <tr><td>State</td><td></td></tr>
+                    <tr><td>Last Updated</td><td></td></tr>
+                    <tr><td>Created</td><td></td></tr>
+                    <tr><td>Organization</td><td></td></tr>
+                    <tr><td>Version</td><td></td></tr>
+                    <tr><td>Author</td><td></td></tr>
+                    <tr><td>Tags</td><td></td></tr>
+                    <tr><td>Download</td><td class="align-center"><a><i class="fa fa-download fa-lg"></i></a></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+@Scripts.Render("~/Scripts/Ckan.js")
+
+
+
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/jq-2.2.3/dt-1.10.12/r-2.1.0/datatables.min.js"></script>
+
+<script src="https://use.fontawesome.com/71f2aff7ff.js"></script>
+
+}

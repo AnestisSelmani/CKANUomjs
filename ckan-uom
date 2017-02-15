@@ -1,0 +1,390 @@
+/* 
+ * Main script file for the integration of the CKAN into the Drupal pages
+ * of the University of Macedonia Data Portal
+ * 
+ */
+/*
+ * @namespace namespace creation
+ * @global athena
+ * check if namespace exists
+ */
+var uom_CKAN = uom_CKAN || {};
+/**
+ * @module uom-CKAN 
+ * @mixes jQuery, dataTables
+ * @alias w, $, util, authModule
+ */
+uom_CKAN = (function ($) {
+
+    //Default urls for the University of Macedonia CKAN instance
+    var ckan_instance_url = 'http://data.dai.uom.gr/data',
+    ckan_instance_endpoint = 'http://data.dai.uom.gr/data/api/3/action/',
+    ckan_instance_dataset = 'http://data.dai.uom.gr/data/dataset/',
+    ckan_currentDatasets_endpoint = 'http://data.dai.uom.gr/data/api/3/action/current_package_list_with_resources?limit=100'
+    id = '?id=',
+    callback = "?callback=?";
+
+    var packageTable;
+
+    // Type of actions provided from the CKAN Api {http://docs.ckan.org/en/latest/api/}
+    var Action_Enum = {
+        PackageList: "package_list",
+        GroupList: "group_list",
+        TagList: "tag_list",
+        PackageShow: "package_show",
+        TagShow: "tag_show",
+        GroupShow: "group_show",
+        PackageListWithResources: "current_package_list_with_resources",
+        OrganizationList: "organization_list",
+        FormatList: "license_list"
+    };
+
+    // 
+    var TypeofAction_Enum = {
+        GET: 0,
+        GETALL: 1,
+        GETCURRENT: 2
+    };
+
+    /**
+     * Return the ckan instance dataset path
+     */
+    function getDatasetUrl() {
+        return ckan_instance_dataset;
+    }
+
+    /**
+     * Returns the type of actions available
+     */
+    function getActions() {
+         return Action_Enum;
+    }
+
+    /**
+     * Illustrates the ajax call through the CKAN Api
+     * Returns the json response 
+     * @param action : the action type in order to create the url needed
+     */
+    function getAll(action) {
+
+        var url = ckan_currentDatasets_endpoint;
+        return $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "jsonp",
+            contentType: "application/x-www-form-urlencoded",
+            crossDomain: true
+        }).done(function (result) {
+            return result;
+        }).error(function (jqXHR, textStatus, errorThrown) {
+            return null;
+        });
+    }
+
+    function buildUrl(action, typeOfAction) {
+        var url = '';
+        switch(typeOfAction) {
+            case 0:
+                url = ckan_instance_endpoint + action + id;
+                break;
+            case 1:
+                url = ckan_instance_endpoint + action + callback;
+                break;
+            default:
+                break;
+        }
+        return url;
+    }
+
+    /**
+     * Illustrates the get single dataset by id
+     * Returns the json response which has the entire object
+     */
+    function getDataset(action, dataset) {
+        var result;
+        var url = buildUrl(action, TypeofAction_Enum.GET) + dataset;
+        return $.ajax({
+            url: url,
+            type: "GET",
+            dataType: "jsonp",
+            contentType: "application/x-www-form-urlencoded",
+            crossDomain: true
+        }).done(function (result) {
+            return result;
+        }).error(function (jqXHR, textStatus, errorThrown) {
+            return null
+        });
+    }
+
+    //Detailed Package Show
+    /**
+     * The function used to show all Datasets
+     */
+    //function createPackageShowTable(packageShow) {
+    //    var tableRows = $('#packageShowTable > tbody > tr');
+    //    var packageObj = mapPackage(packageShow);
+
+    //    $.each(packageObj, function (index, value) {
+    //        if (index < 9) {
+    //            removeChildNodes($(tableRows[index]).children()[1]).appendChild(document.createTextNode(value));
+    //        }
+    //        else {
+    //            $($(tableRows[index]).children()[1].children[0]).attr('href', value);
+    //        }
+    //    });
+
+    //    $("#packageShow").show();
+    //}
+    
+    //Display Spinner
+    function displayLoadingSpinner() {
+        $("#loadingSpinnerModal, #bounceSpinner").css("display", "block");
+    }
+
+    //HideSpinner
+    function hideLoadingSpinner() {
+        $("#loadingSpinnerModal, #bounceSpinner").css("display", "none");
+    }
+
+    return {
+        getActions: getActions,
+        getAll: getAll,
+        //createPackageListTable: createPackageListTable,
+        //createTagListTable: createTagListTable,
+        //createGroupListTable: createGroupListTable,
+        //createFormatListTable: createFormatListTable,
+        //createOrganizationListTable: createOrganizationListTable,
+	getDatasetUrl:getDatasetUrl
+
+
+    };
+}(jQuery));
+
+/**
+* Implemented specificaly for the university of Macedonia presentation of all datasets
+* It creates the table rows, the elements containing the dataset information and the attributes
+* needed for the references
+*/
+function createPackageListTable(tableDiv, tableData) {
+var table = $("#packageListTable")[0],
+    tableBody = $("#packageListTable > tbody")[0];
+
+for (var x = 0; x < tableData.length; x++) {
+    var tr = document.createElement("tr"),
+        tdDataset = document.createElement("td"),
+        tdAddInfo = document.createElement("td"),
+        aName = document.createElement("a"),
+        iName = document.createElement("i"),
+        divName = document.createElement("div"),
+        divNotes = document.createElement("div"),
+        divResources = document.createElement("div"),
+        divAuthor = document.createElement("div"),
+        divOrganization = document.createElement("div"),
+        divTags = document.createElement("div"),
+        resourceLink = document.createElement("a");
+
+    //Add needed classes for css manipulation
+    divName.className += "uom-dataset-name col-md-12";
+    divNotes.className += "uom-dataset-description col-md-12";
+    divResources.className += "uom-dataset-resources col-md-12";
+    divAuthor.className += "uom-dataset-author col-md-12";
+    divOrganization.className += "uom-dataset-organization col-md-12";
+    divTags.className += "uom-dataset-tags col-md-12";
+
+    //Create Name object
+    aName.href = uom_CKAN.getDatasetUrl() + tableData[x].name;
+    iName.className += "fa fa-folder-open";
+    aName.appendChild(iName);
+    aName.appendChild(document.createTextNode(" " + tableData[x].title));
+    divName.appendChild(aName);
+
+    //Create Notes object
+    if (tableData[x].notes) {
+        divNotes.appendChild(document.createTextNode(tableData[x].notes));
+    }
+    else {
+        divNotes.appendChild(document.createTextNode("There is no description available"));
+    }
+    //Create Resources object
+    if (tableData[x].resources.length > 0) {
+        $.each(tableData[x].resources, function (index, value) {
+            var spanResource = document.createElement('span'),
+                aResource = document.createElement('a'),
+                iResource = document.createElement('i');
+
+            spanResource.className += "uom-dataset-resource";
+            aResource.href = tableData[x].resources[index].url;
+            iResource.className += "fa-uom fa fa-arrow-circle-o-down";
+
+            aResource.appendChild(document.createTextNode(tableData[x].resources[index].format + " "));
+            aResource.appendChild(iResource);
+            spanResource.appendChild(aResource);
+            divResources.appendChild(spanResource);
+        });
+    }
+
+    //Create Author object
+    divAuthor.appendChild(document.createTextNode("Author: "));
+    if (tableData[x].author) {
+        divAuthor.appendChild(document.createTextNode(tableData[x].author));
+    } else {
+        divAuthor.appendChild(document.createTextNode("There is no Author available"));
+    }
+
+    //Create Organization object
+    divOrganization.appendChild(document.createTextNode("Organization: "));
+    if (tableData[x].organization) {
+        divOrganization.appendChild(document.createTextNode(tableData[x].organization.name));
+    } else {
+        divOrganization.appendChild(document.createTextNode("There is no Organization available"));
+    }
+
+    //Create Tags object
+    if (tableData[x].num_tags > 0) {
+        $.each(tableData[x].tags, function (index, value) {
+            var spanTag = document.createElement('span'),
+                iTag = document.createElement('tag');
+
+            spanTag.className += "uom-dataset-tag";
+            iTag.className += "fa-uom fa fa-tags";
+
+            spanTag.appendChild(iTag);
+            spanTag.appendChild(document.createTextNode(" " + tableData[x].tags[index].display_name));
+            divTags.appendChild(spanTag);
+        });
+    }
+
+    tdDataset.appendChild(divName);
+    tdDataset.appendChild(divNotes);
+    tdDataset.appendChild(divResources);
+
+    tdAddInfo.appendChild(divAuthor);
+    tdAddInfo.appendChild(divOrganization);
+    tdAddInfo.appendChild(divTags);
+
+
+    tr.appendChild(tdDataset);
+    tr.appendChild(tdAddInfo);
+
+    tableBody.appendChild(tr);
+}
+table.appendChild(tableBody);
+
+$("#packageListTable").DataTable({
+    "lengthMenu": [[20, 10, 20, 50, -1], [20, 10, 20, 50, "All"]],
+    responsive: true
+});
+
+//Manipulate the height of the second row of the object in order to look like table
+$(".uom-dataset-organization").each(function (index) {
+    $(this).css("height", $(this.closest("tr")).children().find(".uom-dataset-description").height());
+});
+}
+
+/**
+* fuction used to create the group list table
+* @param {} tableDiv 
+* @param {} tableData 
+*/
+function createGroupListTable(tableDiv, tableData) {
+var table = $("#groupListTable")[0],
+    tableBody = $("#groupListBody")[0];
+
+for (var x = 0; x < tableData.length; x++) {
+    var tr = document.createElement('tr'),
+        td = document.createElement('td');
+
+    tr.appendChild(document.createElement('td'));
+    tr.appendChild(td);
+
+    tr.cells[0].appendChild(document.createTextNode(tableData[x]));
+    tableBody.appendChild(tr);
+}
+table.appendChild(tableBody);
+
+$("#groupListTable").DataTable({
+    "lengthMenu": [[20, 10, 20, 50, -1], [20, 10, 20, 50, "All"]],
+    responsive: true
+});
+}
+
+/**
+* fuction used to create the format list table
+* @param {} tableDiv 
+* @param {} tableData 
+*/
+function createFormatListTable(tableDiv, tableData) {
+var table = $("#formatListTable")[0],
+    tableBody = $("#formatListBody")[0];
+
+for (var x = 0; x < tableData.length; x++) {
+    var tr = document.createElement("tr"),
+        td = document.createElement("td");
+
+    tr.appendChild(document.createElement("td"));
+    tr.appendChild(td);
+
+    tr.cells[0].appendChild(document.createTextNode(tableData[x]));
+    tableBody.appendChild(tr);
+}
+table.appendChild(tableBody);
+
+$("#formatListTable").DataTable({
+    "lengthMenu": [[20, 10, 20, 50, -1], [20, 10, 20, 50, "All"]],
+    responsive: true
+});
+}
+
+/**
+* fuction used to create the organization list table
+* @param {} tableDiv 
+* @param {} tableData 
+*/
+function createOrganizationListTable(tableDiv, tableData) {
+var table = $("#organizationListTable")[0],
+    tableBody = $("#organizationListBody")[0];
+
+for (var x = 0; x < tableData.length; x++) {
+    var tr = document.createElement("tr"),
+        td = document.createElement("td");
+
+    tr.appendChild(document.createElement("td"));
+    tr.appendChild(td);
+
+    tr.cells[0].appendChild(document.createTextNode(tableData[x]));
+    tableBody.appendChild(tr);
+}
+table.appendChild(tableBody);
+
+$("#organizationListTable").DataTable({
+    "lengthMenu": [[20, 10, 20, 50, -1], [20, 10, 20, 50, "All"]],
+    responsive: true
+});
+}
+
+/**
+* fuction used to create the tag list table
+* @param {} tableDiv 
+* @param {} tableData 
+*/
+function createTagListTable(tableDiv, tableData) {
+var table = $("#tagListTable")[0],
+    tableBody = $("#tagListBody")[0];
+
+for (var x = 0; x < tableData.length; x++) {
+    var tr = document.createElement('tr'),
+        td = document.createElement('td');
+
+    tr.appendChild(document.createElement('td'));
+    tr.appendChild(td);
+
+    tr.cells[0].appendChild(document.createTextNode(tableData[x]));
+    tableBody.appendChild(tr);
+}
+table.appendChild(tableBody);
+
+$("#tagListTable").DataTable({
+    "lengthMenu": [[20, 10, 20, 50, -1], [20, 10, 20, 50, "All"]],
+    responsive: true
+});
+}
